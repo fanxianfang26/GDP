@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>报表配置 - 登录</title>
+  <style>
+    /* 添加登录页面样式 */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    
+    .container {
+      max-width: 300px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+
+</head>
+<body>
+  <div class="container">
+    <h2>管理员登录</h2>
+    <form id="loginForm">
+      <div>
+        <input type="text" id="username" placeholder="用户名" required>
+      </div>
+      <div>
+        <input type="password" id="password" placeholder="密码" required>
+      </div>
+      <button type="submit">登录</button>
+    </form>
+  </div>
+
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script>
+    $(function() {
+      $('#loginForm').submit(function(e) {
+        e.preventDefault();
+        
+        var username = $('#username').val();
+        var password = $('#password').val();
+        var redirectUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
+
+        $.ajax({
+          url: '/api/auth/login',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ username: username, password: password }),
+          success: function(data) {
+            // 登录成功，跳转到之前的页面或主页
+            window.location.href = redirectUrl;
+          },
+          error: function(xhr, status, error) {
+            // 登录失败，显示错误提示
+            alert('登录失败: ' + xhr.responseJSON.message);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

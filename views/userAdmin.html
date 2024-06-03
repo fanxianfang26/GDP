@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>用户管理</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    form div {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    form input, form select, form button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+
+    form button {
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    form button:hover {
+      background-color: #45a049;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    tbody tr:nth-child(odd) {
+      background-color: #f9f9f9;
+    }
+
+    tbody tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    .button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>用户管理</h2>
+    <form id="userForm">
+      <input type="hidden" id="userIdInput" name="id">
+      <div>
+        <label for="usernameInput">账号:</label>
+        <input type="text" id="usernameInput" name="username" required>
+      </div>
+      <div>
+        <label for="passwordInput">密码:</label>
+        <input type="password" id="passwordInput" name="password">
+      </div>
+      <div>
+        <label for="nameInput">姓名:</label>
+        <input type="text" id="nameInput" name="name" required>
+      </div>
+      <div>
+        <label for="departmentInput">部门:</label>
+        <input type="text" id="departmentInput" name="department" required>
+      </div>
+      <div>
+        <label for="companyInput">公司:</label>
+        <input type="text" id="companyInput" name="company" required>
+      </div>
+      <div>
+        <label for="configPermissionSelect">配置权限:</label>
+        <select id="configPermissionSelect" name="configPermission">
+          <option value="false">否</option>
+          <option value="true">是</option>
+        </select>
+      </div>
+      <button type="submit">保存用户</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>账号</th>
+          <th>姓名</th>
+          <th>部门</th>
+          <th>公司</th>
+          <th>配置权限</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody"></tbody>
+    </table>
+  </div>
+
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script>
+    $(function() {
+  // 检查用户登录状态和权限
+  $.ajax({
+        url: '/api/auth/checkLogin',
+        type: 'GET',
+        success: function(data) {
+          if (!data.isLoggedIn || (data.username !== 'admin' && data.username !== '167788')) {
+            // 如果未登录或不是指定用户，则跳转到登录页面，并记录当前页面URL
+            window.location.href = '/login?redirect=' + encodeURIComponent(window.location.href);
+          }
+        },
+        error: function(xhr, status, error) {
+          // 请求失败，跳转到登录页面
+          window.location.href = '/login?redirect=' + encodeURIComponent(window.location.href);
+        }
+      });
+
+      function loadUsers() {
+        $.ajax({
+          url: '/api/users',
+          type: 'GET',
+          success: function(data) {
+            var tbody = $('#userTableBody');
+            tbody.empty();
+            data.forEach(function(user) {
+              var tr = $('<tr></tr>');
+              tr.append('<td>' + user.username + '</td>');
+              tr.append('<td>' + user.name + '</td>');
+              tr.append('<td>' + user.department + '</td>');
+              tr.append('<td>' + user.company + '</td>');
+              tr.append('<td>' + (user.configPermission ? '是' : '否') + '</td>');
+              tr.append('<td><button class="edit-btn" data-id="' + user._id + '">编辑</button> <button class="del-btn" data-id="' + user._id + '">删除</button></td>');
+              tbody.append(tr);
+            });
+          },
+          error: function(xhr, status, error) {
+            console.error('加载用户失败:', error);
+          }
+        });
+      }
+
+      loadUsers();
+
+      $('#userForm').submit(function(e) {
+        e.preventDefault();
+        var id = $('#userIdInput').val();
+        var formData = {
+          username: $('#usernameInput').val(),
+          password: $('#passwordInput').val(),
+          name: $('#nameInput').val(),
+          department: $('#departmentInput').val(),
+          company: $('#companyInput').val(),
+          configPermission: $('#configPermissionSelect').val() === 'true'
+        };
+
+        if (id) {
+          // 更新用户信息
+          $.ajax({
+            url: '/api/users/' + id,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function() {
+              loadUsers();
+              $('#userForm')[0].reset();
+              $('#userIdInput').val('');
+            },
+            error: function(xhr, status, error) {
+              console.error('更新用户失败:', error);
+            }
+          });
+        } else {
+          // 创建新用户
+          $.ajax({
+            url: '/api/users',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function() {
+              loadUsers();
+              $('#userForm')[0].reset();
+            },
+            error: function(xhr, status, error) {
+              console.error('添加用户失败:', error);
+            }
+          });
+        }
+      });
+
+      $('#userTableBody').on('click', '.del-btn', function() {
+        var id = $(this).data('id');
+        $.ajax({
+          url: '/api/users/' + id,
+          type: 'DELETE',
+          success: function() {
+            loadUsers();
+          },
+          error: function(xhr, status, error) {
+            console.error('删除用户失败:', error);
+          }
+        });
+      });
+
+      $('#userTableBody').on('click', '.edit-btn', function() {
+        var id = $(this).data('id');
+        $.ajax({
+          url: '/api/users/' + id,
+          type: 'GET',
+          success: function(user) {
+            $('#userIdInput').val(user._id);
+            $('#usernameInput').val(user.username);
+            $('#passwordInput').val('');
+            $('#nameInput').val(user.name);
+            $('#departmentInput').val(user.department);
+            $('#companyInput').val(user.company);
+            $('#configPermissionSelect').val(user.configPermission.toString());
+          },
+          error: function(xhr, status, error) {
+            console.error('获取用户详情失败:', error);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

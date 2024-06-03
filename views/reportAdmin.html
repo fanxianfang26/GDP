@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>合肥协鑫集成数字化平台</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            font-size: 14px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        form div {
+            margin-bottom: 5px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        form label {
+            display: inline-block;
+            width: auto;
+        }
+
+        form input, form select, form button {
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        form input[type="number"], form select {
+            width: 60px;
+        }
+
+        form input[type="text"], form input[type="url"] {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        form button {
+            width: auto;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 5px;
+        }
+
+        form button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            background-color: #fff;
+            table-layout: auto;
+            box-sizing: border-box;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 6px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        th:nth-child(1), td:nth-child(1) {
+            width: 5%;
+        }
+
+        th:nth-child(2), td:nth-child(2) {
+            width: 15%;
+        }
+
+        th:nth-child(3), td:nth-child(3) {
+            width: 50%;
+        }
+
+        th:nth-child(4), td:nth-child(4) {
+            width: 10%;
+        }
+
+        th:nth-child(5), td:nth-child(5) {
+            width: 10%;
+        }
+
+        th:nth-child(6), td:nth-child(6) {
+            width: 10%;
+        }
+
+        .url-input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 5px;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h2>报表配置</h2>
+    <form id="settingsForm">
+        <div>
+            <label for="rowsInput">图标行数:</label>
+            <input type="number" id="rowsInput" name="rows" min="1" value="10">
+        </div>
+        <div>
+            <label for="columnsInput">图标列数:</label>
+            <input type="number" id="columnsInput" name="columns" min="1" value="4">
+        </div>
+        <button type="button" id="updateSettingsBtn">更新设置</button>
+    </form>
+
+    <form id="reportForm">
+        <div>
+            <label for="displayOrderInput">顺序:</label>
+            <input type="number" id="displayOrderInput" name="order" min="1" required>
+        </div>
+        <div>
+            <label for="reportNameInput">报表名称:</label>
+            <input type="text" id="reportNameInput" name="name" required>
+        </div>
+        <div>
+            <label for="urlInput">链接地址:</label>
+            <input type="url" id="urlInput" name="url" required>
+        </div>
+        <div>
+            <label for="visibleSelect">可见性:</label>
+            <select id="visibleSelect" name="visible">
+                <option value="true">显示</option>
+                <option value="false">隐藏</option>
+            </select>
+        </div>
+        <div>
+            <label for="iconInput">图标文件:</label>
+            <input type="file" id="iconInput" name="icon" accept="image/*">
+        </div>
+        <button type="submit" id="addReportBtn">添加报表</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>顺序</th>
+                <th>报表名称</th>
+                <th>链接地址</th>
+                <th>可见性</th>
+                <th>图标文件</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="reportTableBody"></tbody>
+    </table>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h3>编辑报表</h3>
+            <form id="editReportForm">
+                <input type="hidden" name="_id">
+                <div>
+                    <label>顺序:</label>
+                    <input type="number" name="order" required>
+                </div>
+                <div>
+                    <label>报表名称:</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div>
+                    <label>链接地址:</label>
+                    <input type="url" name="url" required>
+                </div>
+                <div>
+                    <label>可见性:</label>
+                    <select name="visible">
+                        <option value="true">显示</option>
+                        <option value="false">隐藏</option>
+                    </select>
+                </div>
+                <div>
+                    <label>图标文件:</label>
+                    <input type="file" name="icon" accept="image/*">
+                </div>
+                <button type="submit">保存</button>
+                <button type="button" id="cancelEditBtn">取消</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(function() {
+
+        // 检查用户登录状态和权限
+      $.ajax({
+        url: '/api/auth/checkLogin',
+        type: 'GET',
+        success: function(data) {
+          if (!data.isLoggedIn || !data.configPermission) {
+            // 如果未登录或没有配置权限，则跳转到登录页面，并记录当前页面URL
+            window.location.href = '/login?redirect=' + encodeURIComponent(window.location.href);
+          }
+        },
+        error: function(xhr, status, error) {
+          // 请求失败，跳转到登录页面
+          window.location.href = '/login?redirect=' + encodeURIComponent(window.location.href);
+        }
+      });
+            function loadReports() {
+                $.ajax({
+                    url: '/api/reports',
+                    type: 'GET',
+                    success: function(data) {
+                        var tbody = $('#reportTableBody');
+                        tbody.empty();
+                        data.forEach(function(report) {
+                            var tr = $('<tr></tr>');
+                            tr.append('<td>' + report.order + '</td>');
+                            tr.append('<td>' + report.name + '</td>');
+                            tr.append('<td><input type="text" class="url-input" value="' + report.url + '" readonly></td>');
+                            tr.append('<td>' + (report.visible ? '显示' : '隐藏') + '</td>');
+                            tr.append('<td><img src="' + report.icon + '" alt="图标" style="max-width: 30px;"></td>');
+                            tr.append('<td><button class="edit-btn" data-id="' + report._id + '">编辑</button> <button class="del-btn" data-id="' + report._id + '">删除</button></td>');
+                            tbody.append(tr);
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('加载报表失败:', error);
+                    }
+                });
+            }
+
+            loadReports();
+
+            $('#reportForm').submit(function(e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                var report = {
+                    order: formData.get('order'),
+                    name: formData.get('name'),
+                    url: formData.get('url'),
+                    visible: formData.get('visible') === 'true'
+                };
+
+                var iconFile = formData.get('icon');
+                if (iconFile && iconFile.name) {
+                    $.ajax({
+                        url: '/api/upload',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(data) {
+                            report.icon = data.url;
+                            addReport(report);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('上传图标失败:', error);
+                        }
+                    });
+                } else {
+                    addReport(report);
+                }
+            });
+
+            function addReport(report) {
+                $.ajax({
+                    url: '/api/reports',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(report),
+                    success: function() {
+                        loadReports();
+                        $('#reportForm')[0].reset();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('添加报表失败:', error);
+                    }
+                });
+            }
+
+            $('#reportTableBody').on('click', '.del-btn', function() {
+                var id = $(this).data('id');
+                $.ajax({
+                    url: '/api/reports/' + id,
+                    type: 'DELETE',
+                    success: function() {
+                        loadReports();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('删除报表失败:', error);
+                    }
+                });
+            });
+
+            $('#reportTableBody').on('click', '.edit-btn', function() {
+                var id = $(this).data('id');
+                $.ajax({
+                    url: '/api/reports/' + id,
+                    type: 'GET',
+                    success: function(report) {
+                        $('#editReportForm input[name="_id"]').val(report._id);
+                        $('#editReportForm input[name="order"]').val(report.order);
+                        $('#editReportForm input[name="name"]').val(report.name);
+                        $('#editReportForm input[name="url"]').val(report.url);
+                        $('#editReportForm select[name="visible"]').val(report.visible);
+                        $('#editModal').show();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('获取报表详情失败:', error);
+                    }
+                });
+            });
+
+            $('#editReportForm').submit(function(e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                var reportId = formData.get('_id');
+                var reportData = {
+                    name: formData.get('name'),
+                    url: formData.get('url'),
+                    order: formData.get('order'),
+                    visible: formData.get('visible')
+                };
+
+                var iconFile = formData.get('icon');
+                if (iconFile && iconFile.name) {
+                    $.ajax({
+                        url: '/api/upload',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(data) {
+                            reportData.icon = data.url;
+                            updateReport(reportId, reportData);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('上传图标失败:', error);
+                        }
+                    });
+                } else {
+                    updateReport(reportId, reportData);
+                }
+            });
+
+            function updateReport(id, report) {
+                $.ajax({
+                    url: '/api/reports/' + id,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(report),
+                    success: function() {
+                        loadReports();
+                        $('#editModal').hide();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('更新报表失败:', error);
+                    }
+                });
+            }
+
+            $('#cancelEditBtn').click(function() {
+                $('#editModal').hide();
+            });
+
+            $('#updateSettingsBtn').click(function() {
+                var rows = $('#rowsInput').val();
+                var columns = $('#columnsInput').val();
+                $.ajax({
+                    url: '/api/icon-settings',
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ rows: rows, columns: columns }),
+                    success: function() {
+                        alert('图标设置已更新');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('更新图标设置失败:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
